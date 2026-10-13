@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoCrime Jatim | Dashboard Strategis</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {     
+            --primary: #6366f1; 
+            --primary-hover: #4f46e5;
+            --dark: #0f172a; 
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; background: #000; color: white; overflow-x: hidden; }
+        
+        .hero-content p {
+            font-size: 1.05rem;  
+            line-height: 1.7;    
+            opacity: 0.8;       
+            max-width: 650px;   
+            margin-bottom: 35px;
+            text-align: justify; 
+        }
+
+        /* NAVBAR */
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 20px 8%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; transition: 0.4s ease;
+        }
+        nav.scrolled { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(15px); padding: 15px 8%; border-bottom: 1px solid var(--border); }
+        .logo-text { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
+        .logo-text span { color: var(--primary); }
+        nav ul { display: flex; list-style: none; gap: 30px; }
+        nav ul li a { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 500; opacity: 0.7; transition: 0.3s; }
+        nav ul li a:hover { opacity: 1; color: var(--primary); }
+
+        /* HERO SECTION */
+        #home {
+            min-height: 100vh;
+            background: radial-gradient(circle at 70% 30%, rgba(99, 102, 241, 0.15), transparent),
+                        radial-gradient(circle at 0% 100%, rgba(15, 23, 42, 1), #000);
+            display: flex; align-items: center; padding: 0 8%; gap: 50px;
+        }
+        .hero-content { flex: 1.2; z-index: 10; }
+        .hero-content h1 { font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1.1; font-weight: 800; margin-bottom: 25px; }
+        .hero-content h1 span { color: var(--primary); }
+
+        .btn { padding: 16px 32px; border-radius: 12px; font-weight: 600; text-decoration: none; transition: 0.3s; display: inline-block; border: none; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+        .btn-outline { border: 1px solid rgba(255,255,255,0.2); color: white; margin-left: 15px; }
+
+        .img-hero-large { width: 100%; max-width: 450px; filter: drop-shadow(0 0 50px rgba(99, 102, 241, 0.3)); animation: floatAnim 6s ease-in-out infinite; }
+        @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
+
+        /* DATA TABLE SECTION */
+        #data { padding: 100px 8%; background: #020617; }
+        .table-container { background: var(--glass); border-radius: 24px; padding: 20px; border: 1px solid var(--border); overflow-x: auto; backdrop-filter: blur(10px); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 20px; border-bottom: 2px solid var(--border); color: var(--primary); font-size: 0.9rem; text-transform: uppercase; }
+        td { padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; }
+
+        /* MAPS DASHBOARD MAIN LAYOUT FIX */
+        #maps { 
+            min-height: 100vh; 
+            display: flex; 
+            border-top: 1px solid var(--border); 
+            background: #0b0f19;
+        }
+        
+        .sidebar { 
+            width: 380px; 
+            min-width: 380px;
+            background: #0f172a; 
+            padding: 30px; 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 10; 
+            gap: 15px;
+        }
+        
+        .map-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #map { 
+            width: 100%;
+            height: 55vh; 
+            background-color: #0f172a !important; 
+            outline: none;
+        }
+        .leaflet-container { background: #0f172a !important; }
+
+        .search-box input { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: white; margin-bottom: 10px; outline: none; }
+        
+        /* Filter Button Styles */ 
+        .mode-switcher { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .filter-btn { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: white; cursor: pointer; transition: 0.3s; font-size: 0.85rem; text-align: left; }
+        .filter-btn i { margin-right: 10px; color: var(--primary); }
+        .filter-btn.active { background: var(--primary); border-color: var(--primary); font-weight: 600; }
+
+        .stat-display { background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(0,0,0,0.4)); padding: 20px; border-radius: 20px; border: 1px solid rgba(99,102,241,0.2); }
+
+        .info.legend { background: rgba(15, 23, 42, 0.9); padding: 15px; border-radius: 12px; border: 1px solid var(--border); color: #fff; line-height: 24px; }
+        .info.legend i { width: 18px; height: 18px; float: left; margin-right: 10px; border-radius: 4px; }
+
+        /* FOOTER */
+        #contact { padding: 80px 8%; background: #000; text-align: center; border-top: 1px solid var(--border); }
+        .social-links a { color: white; font-size: 1.8rem; margin: 0 20px; opacity: 0.6; transition: 0.3s; }
+        .social-links a:hover { color: var(--primary); opacity: 1; }
+
+        /* TAMPILAN LABEL NAMA KOTA INTERAKTIF TANPA KOTAK PUTIH */
+        .leaflet-tooltip.map-label {
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 10px;
+            text-shadow: 1px 1px 3px #000000, -1px -1px 3px #000000;
+            pointer-events: none;
+        }
+        
+        /* BOTTOM METRICS WRAPPER */
+        .bottom-metrics-wrapper {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: auto;
+            align-items: flex-start;
+            background: #0b0f19;
+        } 
+
+        .dashboard-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .dashboard-card {
+            flex: 1;
+            min-width: 160px;
+            background: #1e293b;
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,.25);
+            transition: .3s;
+        }
+
+        .dashboard-card:hover { transform: translateY(-5px); }
+        .dashboard-card .icon { font-size: 30px; margin-bottom: 8px; }
+        .dashboard-card .title { color: #cbd5e1; font-size: 13px; }
+        .dashboard-card .value { font-size: 28px; font-weight: bold; margin-top: 5px; color: #38bdf8; }
+        .progress-item { margin-bottom: 12px; }
+        .progress-item span { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+        .progress-bar { height: 8px; background: #334155; border-radius: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #38bdf8; }
+        .status-box { margin-top: 15px; padding: 10px; background: #14532d; border-radius: 8px; text-align: center; font-weight: bold; font-size: 13px; }
+
+        /* REKOMENDASI SPASIAL CARD */
+        .recommendation-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(15, 23, 42, 0.6));
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-top: auto;
+        }
+        .recommendation-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #818cf8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1024px) {
+            #maps { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; min-width: 100%; }
+            #map { height: 450px; }
+            .bottom-metrics-wrapper { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="navbar">
+        <div class="logo-text">Jawa Timur <span>CRIME.</span></div>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#data">Data Statistik</a></li>
+            <li><a href="#maps">Peta Interaktif</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <section id="home">
+        <div class="hero-content">
+            <h1>Selamat Datang Di <br><span>Dashboard </span> Jatim Crime</h1>
+            <p>Platform Jatim Crime hadir sebagai solusi digital dalam penyajian informasi statistik keamanan wilayah yang transparan dan akurat. Dashboard ini mengolah variabel jumlah kejadian perkara dan rasio penyelesaian tindak pidana menjadi visualisasi yang dinamis. Diharapkan inovasi ini dapat menjadi instrumen strategis bagi pihak terkait dalam memantau stabilitas keamanan daerah, serta memudahkan masyarakat dalam mengakses data sebaran kriminalitas berbasis pemetaan wilayah di Provinsi Jawa Timur.</p>
+            <div class="btn-group">
+                <a href="#maps" class="btn btn-primary">Buka Peta</a>
+                <a href="#data" class="btn btn-outline">Lihat Data</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <img src="Logo1.png" alt="Logo Jawa Timur" class="img-hero-large">
+        </div>
+    </section>
+
+    <section id="data">
+        <h2 style="text-align: center; margin-bottom: 40px;">Database Wilayah</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kabupaten / Kota</th>
+                        <th>Jumlah Kejadian</th>
+                        <th>Penyelesaian (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <button id="btnPanduan" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        ❓ Petunjuk Penggunaan
+    </button>
+
+    <div id="modalPanduan" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div style="background-color: #1e293b; margin: 5% auto; padding: 30px; border: 1px solid #334155; width: 80%; max-width: 600px; border-radius: 15px; color: white; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <span id="closeModal" style="position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #94a3b8;">&times;</span>
+            <h2 style="color: #818cf8; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;">📍 Panduan Navigasi Jatim Crime</h2>
+            <ul style="line-height: 1.8; font-size: 15px; padding-left: 20px;">
+                <li><strong>Eksplorasi Peta:</strong> Arahkan kursor ke wilayah untuk melihat nama Kabupaten/Kota. Klik wilayah untuk detail di panel samping.</li>
+                <li><strong>Warna Wilayah:</strong> Gradasi warna menunjukkan tingkat kriminalitas. Semakin <strong>Merah</strong>, semakin tinggi kejadian perkara.</li>
+                <li><strong>Peta Klaster:</strong> Gunakan tombol filter di sidebar untuk melihat zona <strong>Hotspot</strong> (kerawanan tinggi) dan <strong>Coldspot</strong> (kerawanan rendah) hasil analisis spasial.</li>
+                <li><strong>Pencarian:</strong> Gunakan kolom cari untuk langsung menuju wilayah spesifik.</li>
+            </ul>
+            <div style="margin-top: 25px; text-align: center;">
+                <button onclick="document.getElementById('modalPanduan').style.display='none'" style="padding: 10px 30px; background: #818cf8; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">Saya Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <section id="maps">
+        <div class="sidebar">
+            <h3 style="margin-bottom: 10px;">Visualisasi Peta</h3>
+            
+            <div class="mode-switcher">
+                <button onclick="switchMap('crime')" id="btnCrime" class="filter-btn active">
+                    <i class="fas fa-map-marked-alt"></i> Sebaran Kriminalitas
+                </button>
+                <button onclick="switchMap('lisa')" id="btnLisa" class="filter-btn">
+                    <i class="fas fa-bullseye"></i> Analisis LISA (Hotspot)
+                </button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Cari kabupaten/kota...">
+                <button onclick="searchLocation()" class="btn btn-primary" style="width: 100%; padding: 12px;">CARI LOKASI</button>
+            </div>
+            
+            <div class="stat-display">
+                <small id="stat-title" style="color: var(--primary);">Pilih Wilayah</small>
+                <h4 id="stat-count" style="font-size: 2.2rem; margin: 5px 0;">--</h4>
+                <p id="stat-info" style="font-size: 0.8rem; opacity: 0.6;">Klik wilayah pada peta.</p>
+            </div>
+            <div class="stat-display" style="margin-top:20px;">
+    <h4 style="color:#38bdf8;margin-bottom:15px;">
+        🤖 Analisis Otomatis Sistem
+    </h4>
+
+    <div id="analysisResult"
+        style="font-size:13px;line-height:22px;color:#e2e8f0;">
+        Pilih salah satu wilayah pada peta untuk menampilkan hasil analisis otomatis.
+    </div>
+</div>
+<div class="stat-display" style="margin-top:15px;">
+    <h4 style="color:#fbbf24;margin-bottom:12px;">
+        📖 Interpretasi Hasil LISA
+    </h4>
+
+    <div id="lisaExplanation"
+        style="font-size:13px;line-height:22px;color:#e2e8f0;">
+        Pilih wilayah pada peta untuk melihat penjelasan mengapa wilayah tersebut termasuk Hotspot, Coldspot, atau Tidak Signifikan.
+    </div>
+</div>
+            <!-- KARTU CERDAS REKOMENDASI KEBIJAKAN SPASIAL (Anti-Displacement) -->
+            <div class="recommendation-card" id="recommendation-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                    <span style="color:#818cf8; font-size: 16px;"><i class="fa-solid fa-shield-halved"></i></span>
+                    <div>
+                        <h4 class="recommendation-title">Rekomendasi Spasial</h4>
+                        <p style="font-size: 8px; color: #94a3b8; font-weight: bold; letter-spacing: 0.5px;">ANTI-DISPLACEMENT POLICY</p>
+                    </div>
+                </div>
+                <div id="recommendation-content" style="font-size: 11px; color: #cbd5e1; line-height: 1.6; text-align: justify;">
+                    <p style="color: #64748b; font-style: italic;">Silakan klik wilayah Surabaya, Sidoarjo, Gresik, atau Magetan pada peta untuk memunculkan rancangan rekomendasi kebijakan preventif spasial otomatis.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-main-content">
+            <div id="map"></div>
+            
+            <div class="bottom-metrics-wrapper">
+                <div class="dashboard-container">
+                    <div class="dashboard-card">
+                        <div class="icon">📍</div>
+                        <div class="title">Kabupaten/Kota</div>
+                        <div class="value" id="totalWilayah">38</div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="icon">🔴</div>
+                        <div class="title">Hotspot</div>
+                        <div class="value" id="totalHotspot">0</div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="icon">🔵</div>
+                        <div class="title">Coldspot</div>
+                        <div class="value" id="totalColdspot">0</div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="icon">📈</div>
+                        <div class="title">Moran's I</div>
+                        <div class="value">0.3078</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="social-links">
+            <a href="https://www.instagram.com/novallnw_?"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.linkedin.com/in/noval-nurwakhid-9b6825344?"><i class="fab fa-linkedin"></i></a>
+            <a href="mailto:novalnurwakhid76@gmail.com"><i class="fas fa-envelope"></i></a>
+        </div>
+        <p style="opacity: 0.3; font-size: 0.8rem; margin-top: 30px;">&copy; 2026 M. Noval Nur Wakhid</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+    <script>
+        window.onscroll = function() {
+            const nav = document.getElementById('navbar');
+            if (window.pageYOffset > 50) nav.classList.add("scrolled");
+            else nav.classList.remove("scrolled");
+        };
+
+        // Modal Logic
+        const modal = document.getElementById("modalPanduan");
+        const btnPan = document.getElementById("btnPanduan");
+        const spanClose = document.getElementById("closeModal");
+
+        btnPan.onclick = () => modal.style.display = "block";
+        spanClose.onclick = () => modal.style.display = "none";
+        window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; }
+    </script>
+</body>
+</html>

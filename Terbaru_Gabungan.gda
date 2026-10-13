@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+    <title>Terbaru_Gabungan</title>
+    <layers>
+        <layer>
+            <datasource>
+                <type>GeoJSON</type>
+                <path>Terbaru_Gabungan.geojson</path>
+            </datasource>
+            <layername>Terbaru_Gabungan</layername>
+            <title/>
+            <variable_order>
+                <time_ids>
+                    <id>time 0</id>
+                </time_ids>
+                <var>fid</var>
+                <var>OBJECTID</var>
+                <var>NAMOBJ</var>
+                <var>FCODE</var>
+                <var>REMARK</var>
+                <var>METADATA</var>
+                <var>SRS_ID</var>
+                <var>KDBBPS</var>
+                <var>KDCBPS</var>
+                <var>KDCPUM</var>
+                <var>KDEBPS</var>
+                <var>KDEPUM</var>
+                <var>KDPBPS</var>
+                <var>KDPKAB</var>
+                <var>KDPPUM</var>
+                <var>
+                    LUASWH
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+                <var>TIPADM</var>
+                <var>WADMKC</var>
+                <var>WADMKD</var>
+                <var>WADMKK</var>
+                <var>WADMPR</var>
+                <var>WIADKC</var>
+                <var>WIADKK</var>
+                <var>WIADPR</var>
+                <var>WIADKD</var>
+                <var>UUPP</var>
+                <var>
+                    Shape_Length
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+                <var>
+                    Shape_Area
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+                <var>PEMISAH</var>
+                <var>KAB_CLEAN</var>
+                <var>Jumlah Kejahatan yang Dilaporkan</var>
+                <var>
+                    Persentase Penyelesaian Tindak Pidana
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+                <var>
+                    LISA_I
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+                <var>LISA_CL</var>
+                <var>
+                    LISA_P
+                    <displayed_decimals>6</displayed_decimals>
+                </var>
+            </variable_order>
+            <custom_classifications/>
+            <weights_entries>
+                <weights>
+                    <title>Terbaru_Gabungan</title>
+                    <default/>
+                    <meta_info>
+                        <weights_type>queen</weights_type>
+                        <order>1</order>
+                        <inc_lower_orders>false</inc_lower_orders>
+                        <path>C:\FILE SEMHAS\Terbaru_Gabungan.gal</path>
+                        <id_variable>fid</id_variable>
+                        <symmetry>symmetric</symmetry>
+                        <num_observations>39</num_observations>
+                        <min_neighbors>0</min_neighbors>
+                        <max_neighbors>9</max_neighbors>
+                        <mean_neighbors>3.5384615384615383</mean_neighbors>
+                        <median_neighbors>3</median_neighbors>
+                        <non_zero_perc>9.0729783037475347</non_zero_perc>
+                    </meta_info>
+                </weights>
+            </weights_entries>
+            <default_vars>
+                <default_var>
+                    <name>Jumlah Kejahatan yang Dilaporkan</name>
+                    <time_id>time 0</time_id>
+                </default_var>
+                <default_var>
+                    <name/>
+                    <time_id>time 0</time_id>
+                </default_var>
+                <default_var>
+                    <name/>
+                    <time_id>time 0</time_id>
+                </default_var>
+                <default_var>
+                    <name/>
+                    <time_id>time 0</time_id>
+                </default_var>
+            </default_vars>
+        </layer>
+    </layers>
+</project>
