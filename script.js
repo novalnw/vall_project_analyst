@@ -8,6 +8,7 @@ var geojsonLayer;
 var currentMode = 'crime'; // Default mode
 var legendControl; // Untuk menampung objek legenda
 var selectedInterval = null; // Menyimpan filter interval legenda yang aktif
+var isLegendMinimized = false; // Status minimize legenda untuk tampilan mobile
 
 // --- FUNGSI PEWARNAAN ---
 
@@ -147,179 +148,68 @@ function updateSidebar(props) {
             `;
         }
     }
-// ===============================
-// ANALISIS OTOMATIS SISTEM
-// ===============================
 
-let analisis = "";
+    // ===============================
+    // ANALISIS OTOMATIS SISTEM
+    // ===============================
+    let analisis = "";
+    if(props.LISA_CL == 1) {
+        analisis=`
+            <b style="color:#ef4444;">Status :</b> HOTSPOT (High-High)<br><br>
+            Wilayah <b>${props.WADMKK}</b> memiliki tingkat kriminalitas tinggi dan berdekatan dengan wilayah yang juga memiliki tingkat kriminalitas tinggi.
+            <hr>
+            <b>Rekomendasi Sistem</b>
+            <ul style="padding-left:18px;">
+            <li>Meningkatkan patroli keamanan.</li>
+            <li>Koordinasi dengan wilayah sekitar.</li>
+            <li>Monitoring kriminalitas secara berkala.</li>
+            </ul>
+            <b style="color:#22c55e;">Prioritas Penanganan : SANGAT TINGGI</b>
+        `;
+    } else if(props.LISA_CL == 2) {
+        analisis=`
+            <b style="color:#3b82f6;">Status :</b> COLDSPOT (Low-Low)<br><br>
+            Wilayah ini memiliki tingkat kriminalitas rendah dan dikelilingi wilayah dengan karakteristik yang sama.
+            <hr>
+            <b>Rekomendasi Sistem</b>
+            <ul style="padding-left:18px;">
+            <li>Pertahankan sistem keamanan.</li>
+            <li>Monitoring berkala.</li>
+            </ul>
+            <b style="color:#38bdf8;">Prioritas Penanganan : RENDAH</b>
+        `;
+    } else {
+        analisis=`
+            <b>Status :</b> Tidak Signifikan<br><br>
+            Hasil analisis spasial menunjukkan wilayah ini tidak memiliki hubungan spasial yang signifikan terhadap wilayah sekitarnya.
+            <hr>
+            <b>Rekomendasi Sistem</b>
+            <ul style="padding-left:18px;">
+            <li>Tetap lakukan monitoring.</li>
+            </ul>
+            <b style="color:#facc15;">Prioritas Penanganan : SEDANG</b>
+        `;
+    }
+    document.getElementById("analysisResult").innerHTML = analisis;
 
-if(props.LISA_CL==1){
-
-analisis=`
-<b style="color:#ef4444;">Status :</b> HOTSPOT (High-High)<br><br>
-
-Wilayah <b>${props.WADMKK}</b> memiliki tingkat kriminalitas tinggi dan
-berdekatan dengan wilayah yang juga memiliki tingkat kriminalitas tinggi.
-
-Hal ini menunjukkan adanya autokorelasi spasial lokal sehingga wilayah ini
-menjadi prioritas utama pengawasan.
-
-<hr>
-
-<b>Rekomendasi Sistem</b>
-
-<ul style="padding-left:18px;">
-<li>Meningkatkan patroli keamanan.</li>
-<li>Koordinasi dengan wilayah sekitar.</li>
-<li>Monitoring kriminalitas secara berkala.</li>
-<li>Evaluasi penyelesaian perkara.</li>
-</ul>
-
-<b style="color:#22c55e;">
-Prioritas Penanganan : SANGAT TINGGI
-</b>
-`;
-
-}
-
-else if(props.LISA_CL==2){
-
-analisis=`
-<b style="color:#3b82f6;">Status :</b> COLDSPOT (Low-Low)<br><br>
-
-Wilayah ini memiliki tingkat kriminalitas rendah dan dikelilingi wilayah
-dengan karakteristik yang sama.
-
-Wilayah tetap perlu dipertahankan melalui pengawasan rutin agar kondisi tetap stabil.
-
-<hr>
-
-<b>Rekomendasi Sistem</b>
-
-<ul style="padding-left:18px;">
-<li>Pertahankan sistem keamanan.</li>
-<li>Monitoring berkala.</li>
-<li>Evaluasi tren kriminalitas.</li>
-</ul>
-
-<b style="color:#38bdf8;">
-Prioritas Penanganan : RENDAH
-</b>
-`;
-
-}
-
-else{
-
-analisis=`
-<b>Status :</b> Tidak Signifikan
-
-<br><br>
-
-Hasil analisis spasial menunjukkan wilayah ini tidak memiliki hubungan spasial
-yang signifikan terhadap wilayah sekitarnya.
-
-<hr>
-
-<b>Rekomendasi Sistem</b>
-
-<ul style="padding-left:18px;">
-<li>Tetap lakukan monitoring.</li>
-<li>Evaluasi perkembangan data kriminalitas.</li>
-</ul>
-
-<b style="color:#facc15;">
-Prioritas Penanganan : SEDANG
-</b>
-`;
-
-}
-
-document.getElementById("analysisResult").innerHTML=analisis;
-let penjelasan = "";
-if(props.LISA_CL==1){
-
-penjelasan = `
-<b style="color:#ef4444;">
-Mengapa termasuk Hotspot?
-</b>
-
-<br><br>
-
-Wilayah <b>${props.WADMKK}</b> dikategorikan sebagai
-<b>High-High (Hotspot)</b>
-karena memiliki jumlah kriminalitas yang tinggi
-dan dikelilingi oleh wilayah lain yang juga memiliki
-tingkat kriminalitas tinggi.
-
-<br><br>
-
-Kondisi tersebut menunjukkan adanya
-<b>autokorelasi spasial positif lokal</b>,
-sehingga wilayah ini membentuk klaster kriminalitas
-yang signifikan berdasarkan analisis Local Moran's I.
-
-<br><br>
-
-Wilayah ini menjadi prioritas utama dalam
-pengambilan kebijakan keamanan.
-`;
-
-}
-else if(props.LISA_CL==2){
-
-penjelasan=`
-<b style="color:#3b82f6;">
-Mengapa termasuk Coldspot?
-</b>
-
-<br><br>
-
-Wilayah <b>${props.WADMKK}</b>
-memiliki jumlah kriminalitas yang rendah
-dan dikelilingi wilayah lain dengan tingkat
-kriminalitas yang juga rendah.
-
-<br><br>
-
-Kondisi ini menunjukkan terbentuknya
-<b>klaster Low-Low</b>
-yang menggambarkan stabilitas keamanan wilayah.
-
-<br><br>
-
-Wilayah ini direkomendasikan untuk
-mempertahankan pola pengawasan yang telah berjalan.
-`;
-
-}
-else{
-
-penjelasan=`
-<b>
-Mengapa Tidak Signifikan?
-</b>
-
-<br><br>
-
-Nilai Local Moran's I pada wilayah
-<b>${props.WADMKK}</b>
-tidak memenuhi tingkat signifikansi statistik.
-
-<br><br>
-
-Artinya wilayah tersebut
-tidak memiliki hubungan spasial yang kuat
-dengan wilayah di sekitarnya.
-
-<br><br>
-
-Oleh karena itu wilayah ini tidak termasuk
-Hotspot maupun Coldspot.
-`;
-
-}
-document.getElementById("lisaExplanation").innerHTML = penjelasan;
+    let penjelasan = "";
+    if(props.LISA_CL == 1) {
+        penjelasan = `
+            <b style="color:#ef4444;">Mengapa termasuk Hotspot?</b><br><br>
+            Wilayah <b>${props.WADMKK}</b> dikategorikan sebagai <b>High-High (Hotspot)</b> karena memiliki jumlah kriminalitas tinggi dan dikelilingi wilayah dengan tingkat kriminalitas tinggi. Menunjukkan autokorelasi spasial positif lokal.
+        `;
+    } else if(props.LISA_CL == 2) {
+        penjelasan = `
+            <b style="color:#3b82f6;">Mengapa termasuk Coldspot?</b><br><br>
+            Wilayah <b>${props.WADMKK}</b> memiliki jumlah kriminalitas rendah dan dikelilingi wilayah lain dengan tingkat kriminalitas rendah. Menggambarkan stabilitas keamanan wilayah.
+        `;
+    } else {
+        penjelasan = `
+            <b>Mengapa Tidak Signifikan?</b><br><br>
+            Nilai Local Moran's I pada wilayah <b>${props.WADMKK}</b> tidak memenuhi tingkat signifikansi statistik yang kuat terhadap wilayah sekitarnya.
+        `;
+    }
+    document.getElementById("lisaExplanation").innerHTML = penjelasan;
 }
 
 fetch('Terbaru_Gabungan.geojson')
@@ -328,25 +218,18 @@ fetch('Terbaru_Gabungan.geojson')
         return res.json();
     })
     .then(data => {
-        // --- HITUNG TOTAL WILAYAH, HOTSPOT, DAN COLDSPOT ---
         let hotspot = 0;
         let coldspot = 0;
 
         data.features.forEach(f => {
-            if (f.properties.LISA_CL == 1) {
-                hotspot++;
-            }
-            if (f.properties.LISA_CL == 2) {
-                coldspot++;
-            }
+            if (f.properties.LISA_CL == 1) hotspot++;
+            if (f.properties.LISA_CL == 2) coldspot++;
         });
 
-        // Masukkan hasil perhitungan ke elemen HTML pendukung
         if (document.getElementById("totalWilayah")) document.getElementById("totalWilayah").innerHTML = data.features.length;
         if (document.getElementById("totalHotspot")) document.getElementById("totalHotspot").innerHTML = hotspot;
         if (document.getElementById("totalColdspot")) document.getElementById("totalColdspot").innerHTML = coldspot;
 
-        // --- PROSES TABEL ---
         const tableBody = document.getElementById('data-table-body');
         if (tableBody) {
             tableBody.innerHTML = ''; 
@@ -368,19 +251,15 @@ fetch('Terbaru_Gabungan.geojson')
             });
         }
 
-        // --- PROSES PETA ---
         geojsonLayer = L.geoJSON(data, {
             style: styleMap,
             onEachFeature: function (f, l) {
-                // TAMPILKAN NAMA KABUPATEN/KOTA SECARA PERMANEN DAN OTOMATIS
                 if (f.properties && f.properties.WADMKK) {
-                    // Menyederhanakan penulisan teks agar muat di area kecil peta dasar
                     var namaSingkat = f.properties.WADMKK.replace("Kabupaten ", "Kab. ").replace("Kota ", "");
-                    
                     l.bindTooltip(namaSingkat, {
-                        permanent: true,        // Label terus menempel tanpa tunggu di-hover/diklik
-                        direction: 'center',    // Berada di center tengah polygon daerah
-                        className: 'map-label'  // Memanggil styling transparan kustom CSS dari index.html
+                        permanent: true,
+                        direction: 'center',
+                        className: 'map-label'
                     }).openTooltip();
                 }
 
@@ -397,14 +276,9 @@ fetch('Terbaru_Gabungan.geojson')
                         updateSidebar(f.properties);
                         l.bindPopup(`
                             <h3>${f.properties.WADMKK}</h3>
-                            <b>Jumlah Kriminalitas</b><br>
-                            ${(f.properties["Jumlah Kejahatan yang Dilaporkan"] || 0).toLocaleString()} Kasus
-                            <br><br>
-                            <b>Persentase Penyelesaian</b><br>
-                            ${f.properties["Persentase Penyelesaian Tindak Pidana"] || 0} %
-                            <br><br>
-                            <b>Kategori LISA</b><br>
-                            ${getLisaStatusText(f.properties.LISA_CL)}
+                            <b>Jumlah Kriminalitas</b><br>${(f.properties["Jumlah Kejahatan yang Dilaporkan"] || 0).toLocaleString()} Kasus<br><br>
+                            <b>Persentase Penyelesaian</b><br>${f.properties["Persentase Penyelesaian Tindak Pidana"] || 0} %<br><br>
+                            <b>Kategori LISA</b><br>${getLisaStatusText(f.properties.LISA_CL)}
                         `).openPopup();
                         map.fitBounds(e.target.getBounds());
                     }
@@ -417,7 +291,6 @@ fetch('Terbaru_Gabungan.geojson')
     })
     .catch(err => console.error(err));
 
-// Fungsi pembantu untuk fokus wilayah jika tabel diklik
 function focusWilayah(namaKabKota) {
     geojsonLayer.eachLayer(l => {
         if (l.feature.properties.WADMKK === namaKabKota) {
@@ -428,7 +301,6 @@ function focusWilayah(namaKabKota) {
     });
 }
 
-// --- FUNGSI SEARCH ---
 function searchLocation() {
     var val = document.getElementById('search-input').value.toUpperCase();
     if (!geojsonLayer) return;
@@ -443,87 +315,87 @@ function searchLocation() {
     });
 }
 
-// --- LEGENDA DINAMIS & INTERAKTIF ---
+// --- LEGENDA DINAMIS & INTERAKTIF DENGAN TOMBOL MINIMIZE (X) ---
 function addLegend() {
     if (legendControl) map.removeControl(legendControl);
 
     legendControl = L.control({position: 'bottomright'});
     legendControl.onAdd = function () {
         var div = L.DomUtil.create('div', 'info legend');
-        // Style CSS dasar legenda
-        div.style.background = 'rgba(30, 41, 59, 0.9)';
+        div.style.background = 'rgba(30, 41, 59, 0.95)';
         div.style.padding = '12px';
         div.style.color = '#fff';
-        div.style.borderRadius = '8px';
-        div.style.lineHeight = '24px';
-        div.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+        div.style.borderRadius = '12px';
+        div.style.lineHeight = '22px';
+        div.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
+        div.style.maxWidth = '260px';
+        div.style.fontSize = '12px';
         
         if (!document.getElementById('legend-style')) {
             var style = document.createElement('style');
             style.id = 'legend-style';
-            style.innerHTML = '.legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.8; border-radius:3px; } .legend-item { cursor:pointer; padding: 2px 5px; } .legend-item:hover { background: rgba(255,255,255,0.1); border-radius:4px; }';
+            style.innerHTML = `
+                .legend i { width: 16px; height: 16px; float: left; margin-right: 8px; opacity: 0.8; border-radius:3px; } 
+                .legend-item { cursor:pointer; padding: 3px 6px; margin: 2px 0; } 
+                .legend-item:hover { background: rgba(255,255,255,0.1); border-radius:4px; }
+                .legend-toggle-btn { background: #ef4444; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; }
+            `;
             document.head.appendChild(style);
         }
         
+        let toggleBtnText = isLegendMinimized ? '🔍 Buka Legenda' : '❌ Tutup';
+        let headerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 6px; margin-bottom: 8px;">
+                <strong>📊 Keterangan Peta</strong>
+                <button onclick="toggleLegendView()" class="legend-toggle-btn">${toggleBtnText}</button>
+            </div>
+        `;
+
+        if (isLegendMinimized) {
+            div.innerHTML = headerHTML;
+            return div;
+        }
+
+        let contentHTML = headerHTML;
+
         if (currentMode === 'crime') {
             var grades = [0, 500, 1000, 2000, 3000];
             var labels = ['0&ndash;500', '500&ndash;1000', '1000&ndash;2000', '2000&ndash;3000', '3000+'];
             
-            div.innerHTML = '<strong>Interval Kejadian (Klik untuk Filter)</strong><br>';
+            contentHTML += '<strong>Interval Kejadian</strong><br>';
             for (var i = 0; i < grades.length; i++) {
                 let activeStyle = (selectedInterval === grades[i]) ? 'style="background: rgba(255,255,255,0.2); font-weight:bold; border-left: 3px solid #fff;"' : '';
                 
-                div.innerHTML += '<div class="legend-item" ' + activeStyle + ' onclick="filterByInterval(' + grades[i] + ')">' +
+                contentHTML += '<div class="legend-item" ' + activeStyle + ' onclick="filterByInterval(' + grades[i] + ')">' +
                     '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' + labels[i] + '</div>';
             }
             if(selectedInterval !== null) {
-                div.innerHTML += '<div style="text-align:center; margin-top:5px;"><button onclick="resetLegendFilter()" style="font-size:11px; padding:2px 8px; cursor:pointer; background:#ef4444; color:#fff; border:none; border-radius:4px;">Reset Filter</button></div>';
+                contentHTML += '<div style="text-align:center; margin-top:6px;"><button onclick="resetLegendFilter()" style="font-size:11px; padding:3px 8px; cursor:pointer; background:#ef4444; color:#fff; border:none; border-radius:4px;">Reset Filter</button></div>';
             }
         } else {
-            // --- VARIABEL GLOBAL MORAN'S I SEBAGAI BUKTI METODOLOGI ---
-           div.innerHTML = `
-            <div style="border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:8px;margin-bottom:8px;">
-                <strong>Hasil Analisis Global Moran's I</strong><br>
-                <span style="font-size:11px;">Moran's I : <b>0.3078</b></span><br>
-                <span style="font-size:11px;">p-value : <b>0.003</b></span><br>
-                <span style="font-size:11px;">z-score : <b>3.4926</b></span><br>
-                <span style="font-size:11px;color:#22c55e;">
-                    Kesimpulan : Autokorelasi Spasial Positif (Signifikan)
-                </span>
+           contentHTML += `
+            <div style="font-size:11px; line-height:18px; margin-bottom: 6px;">
+                <strong>Global Moran's I</strong><br>
+                Moran's I: <b>0.3078</b> (p: 0.003)<br>
+                <span style="color:#22c55e;">Autokorelasi Spasial Positif</span>
             </div>
-
             <strong>Klaster LISA</strong><br>
-
-            <div class="legend-item">
-            <i style="background:#ff0000"></i>
-            High-High (Hotspot)
-            </div>
-
-            <div class="legend-item">
-            <i style="background:#0000ff"></i>
-            Low-Low (Coldspot)
-            </div>
-
-            <div class="legend-item">
-            <i style="background:#334155"></i>
-            Not Significant
-            </div>
-
-            <hr>
-
-            <div style="font-size:11px;line-height:18px;">
-            <b>Interpretasi</b><br><br>
-            🔴 High-High : Wilayah kriminalitas tinggi yang dikelilingi wilayah tinggi.<br><br>
-            🔵 Low-Low : Wilayah kriminalitas rendah yang dikelilingi wilayah rendah.<br><br>
-            ⚫ Not Significant : Tidak terdapat autokorelasi spasial lokal yang signifikan.
-            </div>`;
+            <div class="legend-item"><i style="background:#ff0000"></i>High-High (Hotspot)</div>
+            <div class="legend-item"><i style="background:#0000ff"></i>Low-Low (Coldspot)</div>
+            <div class="legend-item"><i style="background:#334155"></i>Not Significant</div>`;
         }
+
+        div.innerHTML = contentHTML;
         return div;
     };
     legendControl.addTo(map);
 }
 
-// --- FUNGSI INTERAKSI LEGENDA ---
+function toggleLegendView() {
+    isLegendMinimized = !isLegendMinimized;
+    addLegend();
+}
+
 function filterByInterval(lowerBound) {
     if (selectedInterval === lowerBound) {
         selectedInterval = null;
@@ -534,7 +406,6 @@ function filterByInterval(lowerBound) {
     addLegend();
 }
 
-// --- RESET FILTER LEGENDA ---
 function resetLegendFilter() {
     selectedInterval = null;
     geojsonLayer.setStyle(styleMap);
